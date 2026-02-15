@@ -7,10 +7,6 @@ PORT_ESP = 'COM7'
 BAUD_RATE = 115200
 KAMERA_INDEX = 0
 
-
-PROG_PIKSELI = 1800
-
-
 LINIA_CIECIA = 0.65 
 
 print(f"Łączenie z ESP32 na porcie {PORT_ESP}...")
@@ -29,9 +25,20 @@ cap.set(cv2.CAP_PROP_EXPOSURE, -3)
 low_red = np.array([1, 103, 68])
 high_red = np.array([14, 212, 255])
 
+
+def nic(x):
+    pass 
+
+cv2.namedWindow("Kamera")
+
+cv2.createTrackbar("Prog", "Kamera", 1800, 15000, nic) 
+
 print("Czekam na sygnał 'SKANUJ'...")
 
 while True:
+
+    PROG_PIKSELI = cv2.getTrackbarPos("Prog", "Kamera")
+
     if ser.in_waiting > 0:
         try:
             line = ser.readline().decode('utf-8').strip()
@@ -42,20 +49,14 @@ while True:
                 if not ret: break
 
                 height, width = frame.shape[:2]
-                
-
                 granica_y = int(height * LINIA_CIECIA)
-                
-
                 frame_gora = frame[0:granica_y, 0:width]
-
 
                 hsv = cv2.cvtColor(frame_gora, cv2.COLOR_BGR2HSV)
                 mask = cv2.inRange(hsv, low_red, high_red)
                 
                 red_count = cv2.countNonZero(mask)
-                print(f"Wykryto punktów (nad linią): {red_count}")
-
+                print(f"Wykryto punktów (nad linią): {red_count} (Wymagany próg: {PROG_PIKSELI})")
 
                 if red_count > PROG_PIKSELI:
                     print(">>> DECYZJA: ZWYKŁY HO-OH. RESETUJĘ!")
@@ -75,9 +76,7 @@ while True:
         height, width = frame.shape[:2]
         granica_y = int(height * LINIA_CIECIA)
 
-
         cv2.line(frame, (0, granica_y), (width, granica_y), (255, 0, 0), 3)
-
 
         frame_gora = frame[0:granica_y, 0:width] 
         hsv_live = cv2.cvtColor(frame_gora, cv2.COLOR_BGR2HSV)
@@ -88,7 +87,9 @@ while True:
         
         cv2.putText(frame, f"Punkty : {count_live}", (10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_status, 2)
-        cv2.putText(frame, "", (10, height - 20), 
+        
+
+        cv2.putText(frame, f"Wymagany prog: {PROG_PIKSELI}", (10, height - 20), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
         cv2.imshow("Kamera", frame)
