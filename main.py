@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import serial
 import time
+import datetime
 
 PORT_ESP = 'COM7'   
 BAUD_RATE = 115200
@@ -56,8 +57,7 @@ while True:
                 mask = cv2.inRange(hsv, low_red, high_red)
                 
                 red_count = cv2.countNonZero(mask)
-                print(f"Wykryto punktów (nad linią): {red_count} (Wymagany próg: {PROG_PIKSELI})")
-
+                print(f"Wykryto punktów (nad linią): {red_count} (Wymagany próg: {PROG_PIKSELI}), Godzina: {datetime.datetime.now().strftime('%H:%M:%S')}")
                 if red_count > PROG_PIKSELI:
                     print(">>> DECYZJA: ZWYKŁY HO-OH. RESETUJĘ!")
                     ser.write(b'r') 
